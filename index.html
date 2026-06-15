@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./dashboard-v2.css">
+  <title>Prompt Genius</title>
+  
+  <script type="application/manifest+json" id="pwa-manifest">
+  {
+    "name": "🧠 Prompt Genius",
+    "short_name": "PromptAI",
+    "theme_color": "#6c63ff",
+    "background_color": "#0f0f0f",
+    "display": "standalone",
+    "start_url": ".",
+    "icons": [
+      {
+        "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>",
+        "sizes": "512x512",
+        "type": "image/svg+xml"
+      }
+    ]
+  }
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* --- Explicit Theme Configuration Matrices --- */
+    :root {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #1a1a1a;
+      --text-muted: #64748b;
+      --border-color: #ddd;
+      
+      /* Chips */
+      --bg-chip: #f3f4f6;
+      --text-chip: #1a1a1a;
+      --border-chip: #ddd;
+      
+      /* Tabs Container */
+      --bg-tab-bar: #f3f4f6;
+      --bg-tab-active: #ffffff;
+    }
+
+    body.dark {
+      --bg-main: #0f0f0f;
+      --bg-card: #1a1a1a;
+      --text-main: #f0f0f0;
+      --text-muted: #94a3b8;
+      --border-color: #444;
+      
+      /* Chips */
+      --bg-chip: #2a2a2a;
+      --text-chip: #f0f0f0;
+      --border-chip: #444;
+      
+      /* Tabs Container */
+      --bg-tab-bar: #1a1a1a;
+      --bg-tab-active: #2a2a2a;
+    }
+
+    /* Core Architectural Class Enforcements */
+    body {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255,182,193,0.18), transparent 30%),
+    radial-gradient(circle at 90% 20%, rgba(135,206,250,0.18), transparent 30%),
+    radial-gradient(circle at 50% 90%, rgba(221,160,221,0.18), transparent 35%),
+    var(--bg-main);
+
+  color: var(--text-main);
+  transition: background-color .3s ease,color .3s ease;
+}
+
+h1 {
+  background: linear-gradient(
+    90deg,
+    #6366f1,
+    #8b5cf6,
+    #ec4899
+  );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+    
+    /* Strict Chip Engine Styles */
+    .themed-chip {
+      background-color: var(--bg-chip) !important;
+      color: var(--text-chip) !important;
+      border-color: var(--border-chip) !important;
+    }
+    .themed-chip.chip-selected {
+  background: linear-gradient(
+    135deg,
+    #6366f1,
+    #8b5cf6,
+    #ec4899
+  ) !important;
+
+  color: white !important;
+
+  border: none !important;
+
+
+  box-shadow: 0 4px 10px rgba(139,92,246,.15);
+
+}
+
+    /* Generate Button Overrides */
+    .btn-purple {
+  background: linear-gradient(
+    135deg,
+    #6366f1,
+    #8b5cf6,
+    #ec4899
+  ) !important;
+
+  color: white !important;
+
+  box-shadow:
+    0 10px 25px rgba(99,102,241,.25);
+
+  transition: all .25s ease;
+}
+
+.btn-purple:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 15px 35px rgba(99,102,241,.35);
+}
+    .btn-purple:hover {
+      background-color: #5b52e0 !important;
+    }
+
+    /* Input & Select Forms */
+    .themed-input {
+      background-color: var(--bg-card) !important;
+      color: var(--text-main) !important;
+      border-color: var(--border-color) !important;
+    }
+
+    /* Tab Bar Overrides */
+    .themed-tab-bar { background-color: var(--bg-tab-bar) !important; border-color: var(--border-color) !important; }
+    .themed-tab { color: var(--text-muted) !important; background-color: transparent !important; }
+    .themed-tab.tab-active { color: #6c63ff !important; background-color: var(--bg-tab-active) !important; }
+    body.dark .themed-tab.tab-active { color: #ffffff !important; }
+
+    /* Dashboard Dynamic Item Cards */
+    .history-item-card {
+      background-color: var(--bg-card) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-main) !important;
+    }
+    body:not(.dark) .history-item-card {
+      border-color: #e5e7eb !important;
+    }
+    body.dark .history-item-card {
+      background-color: #1e1e1e !important;
+      border-color: #333 !important;
+    }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes mic-wave { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.6); opacity: 0; } }
+    .animate-wave { animation: mic-wave 1.5s infinite ease-out; }
+
+    @media print {
+      body, html, main { background: #fff !important; color: #000 !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      header, section, #results-container, #error-box, #loading-skeleton, .flex, button, input, select, label, textarea, .bookmark-btn, .copy-btn, .speak-btn, #tab-recent, #tab-saved, #clear-dashboard-btn { display: none !important; }
+      #dashboard-container, #dashboard-saved-view { display: block !important; border: none !important; padding: 0 !important; }
+      .saved-print-card { display: block !important; page-break-inside: avoid !important; border: 1px solid #ccc !important; padding: 15px !important; margin-bottom: 20px !important; border-radius: 8px !important; background: #fff !important; }
+    }
+    .history-item-card {
+  transition: all .25s ease;
+}
+
+.history-item-card:hover {
+  transform: translateY(-4px);
+
+  border-color: rgba(139,92,246,.4) !important;
+
+  box-shadow:
+    0 15px 35px rgba(139,92,246,.12);
+}
+    /* Floating Background */
+
+.blob-1 {
+  width: 350px;
+  height: 350px;
+  background: rgba(139,92,246,0.18);
+
+  top: 10%;
+  left: 5%;
+}
+
+.blob-2 {
+  width: 400px;
+  height: 400px;
+  background: rgba(236,72,153,0.15);
+
+  top: 55%;
+  right: 5%;
+
+  animation-duration: 25s;
+}
+
+.blob-3 {
+  width: 300px;
+  height: 300px;
+  background: rgba(59,130,246,0.15);
+
+  bottom: 5%;
+  left: 35%;
+
+  animation-duration: 30s;
+}
+
+
+.gradient-title {
+  position: relative;
+}
+
+
+textarea:focus {
+  box-shadow:
+    0 0 0 4px rgba(139,92,246,.15);
+
+  border-color:
+    rgba(139,92,246,.5);
+
+  outline: none;
+}
+.history-item-card {
+  transition: all 0.25s ease;
+}
+
+.history-item-card:hover {
+  transform: translateY(-4px);
+
+  border-color: rgba(139,92,246,.35) !important;
+
+  box-shadow:
+    0 15px 35px rgba(139,92,246,.15);
+}
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    #8b5cf6,
+    #ec4899
+  );
+
+  border-radius: 999px;
+}
+  </style>
+</head>
+<script src="./dashboard-v2.js"></script>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-8 relative">
+  <div class="floating-bg">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+  <div id="toast-notification" class="fixed top-5 right-5 z-50 transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300 bg-indigo-600 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-md flex items-center gap-2">
+    <i data-lucide="info" id="toast-icon" class="w-4 h-4"></i>
+    <span id="toast-text">Prompt loaded! Click Generate to enhance it.</span>
+  </div>
+
+  <main class="w-full max-w-6xl rounded-2xl shadow-sm border p-6 sm:p-8 mt-10 dynamic-card relative transition-all">
+    
+    <div class="absolute top-6 right-6 flex items-center gap-2 print:hidden">
+      <button id="theme-toggle-btn" class="p-2.5 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:text-indigo-600 transition-all cursor-pointer shadow-sm" title="Toggle Display Theme Mode">
+        <i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <header class="mb-8 text-center sm:text-left">
+      <h1 class="gradient-title text-3xl font-bold tracking-tight flex items-center justify-center sm:justify-start gap-2">
+        <i data-lucide="sparkles" class="w-8 h-8 text-pink-500"></i> Prompt Genius
+      </h1>
+      <p class="text-slate-500 text-sm mt-2">Transform rough ideas into powerful AI-ready prompts.</p>
+    </header>
+
+    <div id="error-box" class="hidden mb-6 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 rounded-xl text-sm flex items-start gap-3">
+      <i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+      <span id="error-message"></span>
+    </div>
+
+    <section class="space-y-6 print:hidden">
+     
+      <div>
+        <label for="user-input" class="block text-sm font-medium mb-2">What are you trying to build or ask AI?</label>
+        <div class="relative w-full">
+          <textarea id="user-input" rows="4" 
+            class="w-full pl-4 pr-14 py-4 rounded-xl border bg-transparent text-current focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder-slate-400 resize-none transition-all border-slate-200 dark:border-zinc-700"
+            placeholder="e.g., i want a script that pulls weather data and sends me an email if its raining tomorrow morning... Make it simple."></textarea>
+          
+          <div class="absolute bottom-4 right-4 flex items-center justify-center">
+            <span id="mic-wave" class="hidden absolute w-10 h-10 bg-red-500 rounded-full animate-wave"></span>
+            <button id="mic-btn" class="relative z-10 p-2.5 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:text-indigo-600 transition-all cursor-pointer shadow-sm">
+              <i data-lucide="mic" id="mic-icon" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-2">Prompt Type</label>
+        <div id="type-chips" class="flex flex-wrap gap-2">
+          <button data-value="AI Chat" class="type-chip themed-chip chip-selected px-4 py-2 text-sm font-medium border rounded-xl transition-all cursor-pointer shadow-sm">💬 AI Chat</button>
+          <button data-value="AI Image" class="type-chip themed-chip px-4 py-2 text-sm font-medium border rounded-xl transition-all cursor-pointer">🖼️ AI Image</button>
+          <button data-value="Code" class="type-chip themed-chip px-4 py-2 text-sm font-medium border rounded-xl transition-all cursor-pointer">💻 Code</button>
+          <button data-value="Video" class="type-chip themed-chip px-4 py-2 text-sm font-medium border rounded-xl transition-all cursor-pointer">🎬 Video</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-2">Target AI Platform</label>
+        <div id="target-chips" class="flex flex-wrap gap-2">
+          <button data-value="ChatGPT" class="target-chip themed-chip chip-selected px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer shadow-sm">ChatGPT</button>
+          <button data-value="Claude" class="target-chip themed-chip px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer">Claude</button>
+          <button data-value="Gemini" class="target-chip themed-chip px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer">Gemini</button>
+          <button data-value="Midjourney" class="target-chip themed-chip px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer">Midjourney</button>
+          <button data-value="DALL-E" class="target-chip themed-chip px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer">DALL-E</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-2">Desired Tone</label>
+        <div id="tone-chips" class="flex flex-wrap gap-2">
+          <button data-value="Professional" class="tone-chip themed-chip chip-selected px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer shadow-sm">Professional</button>
+          <button data-value="Casual" class="tone-chip themed-chip px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer">Casual</button>
+          <button data-value="Technical" class="tone-chip themed-chip px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer">Technical</button>
+          <button data-value="Creative" class="tone-chip themed-chip px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer">Creative</button>
+          <button data-value="Simple" class="tone-chip themed-chip px-3 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer">Simple</button>
+        </div>
+      </div>
+
+      <div>
+        <label for="language-selector" class="block text-sm font-medium mb-2">Output Language</label>
+        <select id="language-selector" class="w-full sm:w-64 px-3 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 themed-input">
+          <option value="English">English</option>
+          <option value="Hindi">Hindi (हिन्दी)</option>
+          <option value="Telugu">Telugu (తెలుగు)</option>
+          <option value="Tamil">Tamil (தமிழ்)</option>
+          <option value="Spanish">Spanish (Español)</option>
+          <option value="French">French (Français)</option>
+          <option value="Arabic">Arabic (العربية)</option>
+          <option value="Portuguese">Portuguese (Português)</option>
+        </select>
+      </div>
+
+      <button id="generate-btn" 
+        class="w-full sm:w-auto px-6 py-3 font-medium rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed btn-purple">
+        <i data-lucide="wand-2" class="w-4 h-4"></i> Generate Engineered Prompts
+      </button>
+    </section>
+   
+    <section id="dashboard-v2">
+
+  <h2 class="dashboard-heading">
+    📊 Dashboard Overview
+  </h2>
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <span class="stat-title">Prompts</span>
+     <span class="stat-number" id="total-prompts-stat">0</span>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-title">Saved</span>
+      <span class="stat-number" id="saved-prompts-stat">0</span>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-title">Avg Score</span>
+      <span class="stat-number" id="avg-score-stat">0</span>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-title">Platforms</span>
+      <span class="stat-number" id="platforms-stat">5</span>
+    </div>
+
+  </div>
+  <div class="quick-actions">
+
+  <div class="quick-card" id="quick-new-prompt">
+  <div class="quick-title">✨ New Prompt</div>
+  <div class="quick-desc">Start creating a new prompt</div>
+</div>
+
+  <div class="quick-card" id="quick-saved-prompts">
+  <div class="quick-title">🔖 Saved Prompts</div>
+  <div class="quick-desc">View your saved collection</div>
+</div>
+
+  <div class="quick-card">
+    <div class="quick-title">📄 Export PDF</div>
+    <div class="quick-desc">Export saved prompts</div>
+  </div>
+
+  <div class="quick-card">
+    <div class="quick-title">📊 AI Usage</div>
+    <div class="quick-desc">Track prompt activity</div>
+  </div>
+
+</div>
+
+</section>
+    <section id="loading-skeleton" class="hidden mt-10 space-y-6 print:hidden">
+      <div class="h-6 bg-slate-200 dark:bg-zinc-800 rounded w-1/4 animate-pulse"></div>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div class="border rounded-xl p-5 space-y-3 border-slate-200 dark:border-zinc-800">
+          <div class="h-4 bg-slate-200 dark:bg-zinc-800 rounded w-1/3 animate-pulse"></div>
+          <div class="h-3 bg-slate-200 dark:bg-zinc-800 rounded animate-pulse"></div>
+          <div class="h-3 bg-slate-200 dark:bg-zinc-800 rounded animate-pulse"></div>
+        </div>
+        <div class="border rounded-xl p-5 space-y-3 border-slate-200 dark:border-zinc-800">
+          <div class="h-4 bg-slate-200 dark:bg-zinc-800 rounded w-1/3 animate-pulse"></div>
+          <div class="h-3 bg-slate-200 dark:bg-zinc-800 rounded animate-pulse"></div>
+          <div class="h-3 bg-slate-200 dark:bg-zinc-800 rounded animate-pulse"></div>
+        </div>
+        <div class="border rounded-xl p-5 space-y-3 border-slate-200 dark:border-zinc-800">
+          <div class="h-4 bg-slate-200 dark:bg-zinc-800 rounded w-1/3 animate-pulse"></div>
+          <div class="h-3 bg-slate-200 dark:bg-zinc-800 rounded animate-pulse"></div>
+          <div class="h-3 bg-slate-200 dark:bg-zinc-800 rounded animate-pulse"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="results-container" class="hidden mt-10 print:hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <div class="flex flex-col gap-2">
+          <h2 class="text-xl font-semibold">Your Polished Prompts</h2>
+          <div id="score-badge-container"></div>
+        </div>
+        
+        <div class="flex items-center gap-2 self-end sm:self-auto">
+          <button id="share-bundle-btn" class="px-4 py-2 border text-sm font-medium rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-transparent hover:text-indigo-600 cursor-pointer" title="Generate Shareable Target Vector Link">
+            <i data-lucide="share-2" class="w-4 h-4"></i> Share
+          </button>
+          <button id="copy-all-btn" class="px-4 py-2 border text-sm font-medium rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-transparent hover:text-indigo-600 cursor-pointer">
+            <i data-lucide="copy" class="w-4 h-4"></i> Copy All 3
+          </button>
+        </div>
+      </div>
+
+      <div class="border rounded-xl mb-6 border-slate-200 dark:border-zinc-800 overflow-hidden transition-all duration-300">
+        <button id="toggle-comparison-panel-btn" class="w-full flex items-center justify-between p-4 font-semibold text-xs text-slate-500 tracking-wide uppercase bg-slate-50/50 dark:bg-zinc-900/30 cursor-pointer hover:text-indigo-600">
+          <span class="flex items-center gap-2"><i data-lucide="git-compare" class="w-4 h-4 text-indigo-500"></i> See What Was Systematically Improved</span>
+          <i data-lucide="chevron-down" id="comparison-chevron" class="w-4 h-4 transition-transform duration-200"></i>
+        </button>
+        <div id="comparison-content-viewport" class="hidden border-t border-slate-200 dark:border-zinc-800 p-4 grid gap-4 md:grid-cols-2 text-xs">
+          <div class="p-3.5 rounded-xl bg-red-50/60 dark:bg-red-950/20 border border-red-100 dark:border-red-950/40">
+            <span class="font-bold text-red-600 dark:text-red-400 block mb-1 uppercase tracking-wider">Original Text Input Statement:</span>
+            <p id="comparison-raw-box" class="whitespace-pre-wrap leading-relaxed text-slate-600 dark:text-zinc-400"></p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-950/40">
+            <span class="font-bold text-emerald-600 dark:text-emerald-400 block mb-1 uppercase tracking-wider">Polished Semantic Understanding:</span>
+            <p id="comparison-polished-box" class="whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-zinc-300"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="cards-grid" class="grid gap-6 md:grid-cols-3"></div>
+    </section>
+
+    <section id="dashboard-container" class="mt-12 border-t pt-8 border-slate-200 dark:border-zinc-800">
+      <div class="flex items-center justify-between gap-4 mb-4 flex-wrap print:hidden">
+        
+        <div class="flex items-center p-1 rounded-xl border border-transparent dark:border-zinc-700 themed-tab-bar shadow-sm">
+          <button id="tab-recent" class="px-4 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all themed-tab tab-active cursor-pointer">
+            <i data-lucide="history" class="w-3.5 h-3.5"></i> Recent Prompts
+          </button>
+          <button id="tab-saved" class="px-4 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all themed-tab cursor-pointer">
+            <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Saved Prompts
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="export-pdf-trigger-btn" class="hidden text-xs font-semibold px-3 py-1.5 border rounded-lg transition-all text-slate-600 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 bg-transparent hover:text-indigo-600 cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Export PDF
+          </button>
+          <button id="clear-dashboard-btn" class="text-xs font-semibold text-red-500 hover:text-red-700 px-3 py-1.5 border border-transparent hover:border-red-100 hover:bg-red-50/40 rounded-lg transition-all flex items-center gap-1 cursor-pointer">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear All
+          </button>
+        </div>
+      </div>
+
+      <div id="search-filter-wrapper-node" class="hidden mb-4 print:hidden">
+        <div class="relative w-full">
+          <input type="text" id="saved-search-query" class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border bg-transparent border-slate-200 dark:border-zinc-700 text-current placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Search saved prompts by body text or tags...">
+          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
+        </div>
+      </div>
+
+      <div id="dashboard-recent-view" class="space-y-3 print:hidden"></div>
+      <div id="dashboard-saved-view" class="space-y-3 print:block"></div>
+      <!-- Dashboard V2 -->
+
+  </main>
+
+  <div id="pwa-install-banner-element" class="fixed bottom-5 left-5 right-5 max-w-md mx-auto z-50 transform translate-y-[150%] transition-all duration-500 bg-slate-900 dark:bg-zinc-900 text-white p-4 rounded-2xl shadow-xl border border-zinc-800 flex flex-col gap-3 hidden print:hidden">
+    <div class="flex items-start gap-3">
+      <div class="p-2 bg-indigo-600 rounded-xl text-xl">✨</div>
+      <div class="flex-grow min-w-0">
+        <h4 class="text-xs font-bold tracking-tight">Install Prompt Genius</h4>
+        <p class="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">Add Prompt Genius to your home screen for rapid access and complete offline prompt engineering optimization maps.</p>
+      </div>
+    </div>
+    <div class="flex items-center justify-end gap-2 text-xs">
+      <button id="pwa-dismiss-action-btn" class="px-3 py-1.5 font-medium text-zinc-400 hover:text-white cursor-pointer">Dismiss</button>
+      <button id="pwa-install-action-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors cursor-pointer shadow-sm">Install App</button>
+    </div>
+  </div>
+
+  <script type="module">
+    const isEdge = navigator.userAgent.includes("Edg");
+    let GROQ_KEY = "";
+    try {
+      if (import.meta && import.meta.env) {
+        GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
+      }
+    } catch (e) {
+      GROQ_KEY = window.VITE_GROQ_API_KEY || "";
+    }
+    
+    const API_ENDPOINT = `https://api.groq.com/openai/v1/chat/completions`;
+
+    const generateBtn = document.getElementById('generate-btn');
+    const userInput = document.getElementById('user-input');
+    const errorBox = document.getElementById('error-box');
+    const errorMessage = document.getElementById('error-message');
+    const skeleton = document.getElementById('loading-skeleton');
+    const resultsContainer = document.getElementById('results-container');
+    const cardsGrid = document.getElementById('cards-grid');
+    const micBtn = document.getElementById('mic-btn');
+    const micIcon = document.getElementById('mic-icon');
+    const micWave = document.getElementById('mic-wave');
+    const copyAllBtn = document.getElementById('copy-all-btn');
+    const scoreBadgeContainer = document.getElementById('score-badge-container');
+    const languageSelector = document.getElementById('language-selector');
+    
+    const toggleComparisonPanelBtn = document.getElementById('toggle-comparison-panel-btn');
+    const comparisonChevron = document.getElementById('comparison-chevron');
+    const comparisonContentViewport = document.getElementById('comparison-content-viewport');
+    const comparisonRawBox = document.getElementById('comparison-raw-box');
+    const comparisonPolishedBox = document.getElementById('comparison-polished-box');
+    const shareBundleBtn = document.getElementById('share-bundle-btn');
+    
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const exportPdfTriggerBtn = document.getElementById('export-pdf-trigger-btn');
+    const searchFilterWrapperNode = document.getElementById('search-filter-wrapper-node');
+    const savedSearchQuery = document.getElementById('saved-search-query');
+    
+    const tabRecentBtn = document.getElementById('tab-recent');
+    const tabSavedBtn = document.getElementById('tab-saved');
+    const clearDashboardBtn = document.getElementById('clear-dashboard-btn');
+    const dashboardRecentView = document.getElementById('dashboard-recent-view');
+    const dashboardSavedView = document.getElementById('dashboard-saved-view');
+    const toastNotification = document.getElementById('toast-notification');
+    const toastText = document.getElementById('toast-text');
+    const toastIcon = document.getElementById('toast-icon');
+    
+    const pwaInstallBannerElement = document.getElementById('pwa-install-banner-element');
+    const pwaDismissActionBtn = document.getElementById('pwa-dismiss-action-btn');
+    const pwaInstallActionBtn = document.getElementById('pwa-install-action-btn');
+
+    let selectedType = "AI Chat";
+    let selectedTarget = "ChatGPT";
+    let selectedTone = "Professional";
+    let currentDashboardTab = "recent"; 
+    let activeFilteringSearchQuery = "";
+    let deferredPwaPromptPointer = null;
+
+    let recognition = null;
+    let isListening = false;
+    let currentUtterance = null;
+    let baselinePromptsList = []; 
+
+    setupEngineInitializationFlows();
+
+    function setupEngineInitializationFlows() {
+      lucide.createIcons();
+      setupThemeRuntimeState();
+      setupChipSelectionGroupListeners('type-chip');
+      setupChipSelectionGroupListeners('target-chip');
+      setupChipSelectionGroupListeners('tone-chip');
+      restoreLocalUserSavedPreferences();
+      renderDashboard();
+      verifyIncomingVectorSharePayloads();
+    }
+
+    function setupThemeRuntimeState() {
+      const persistedThemePreference = localStorage.getItem('genius_user_theme_mode') || 'light';
+      if (persistedThemePreference === 'dark') {
+        document.body.classList.add('dark');
+        themeIcon.setAttribute('data-lucide', 'sun');
+      } else {
+        document.body.classList.remove('dark');
+        themeIcon.setAttribute('data-lucide', 'moon');
+      }
+      lucide.createIcons();
+      
+      themeToggleBtn.addEventListener('click', () => {
+        const triggersDarkNow = !document.body.classList.contains('dark');
+        if (triggersDarkNow) {
+          document.body.classList.add('dark');
+          localStorage.setItem('genius_user_theme_mode', 'dark');
+          themeIcon.setAttribute('data-lucide', 'sun');
+        } else {
+          document.body.classList.remove('dark');
+          localStorage.setItem('genius_user_theme_mode', 'light');
+          themeIcon.setAttribute('data-lucide', 'moon');
+        }
+        lucide.createIcons();
+      });
+    }
+
+    function restoreLocalUserSavedPreferences() {
+      const recordedLanguageSetting = localStorage.getItem('genius_output_language_code');
+      if (recordedLanguageSetting) languageSelector.value = recordedLanguageSetting;
+      
+      languageSelector.addEventListener('change', () => {
+        localStorage.setItem('genius_output_language_code', languageSelector.value);
+      });
+    }
+
+    function setupChipSelectionGroupListeners(className) {
+      document.querySelectorAll(`.${className}`).forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll(`.${className}`).forEach(c => {
+            c.classList.remove('chip-selected', 'shadow-sm');
+          });
+          chip.classList.add('chip-selected', 'shadow-sm');
+          
+          if (className === 'type-chip') selectedType = chip.getAttribute('data-value');
+          if (className === 'target-chip') selectedTarget = chip.getAttribute('data-value');
+          if (className === 'tone-chip') selectedTone = chip.getAttribute('data-value');
+        });
+      });
+    }
+
+    toggleComparisonPanelBtn.addEventListener('click', () => {
+      const isHidden = comparisonContentViewport.classList.contains('hidden');
+      if (isHidden) {
+        comparisonContentViewport.classList.remove('hidden');
+        comparisonChevron.style.transform = 'rotate(180deg)';
+      } else {
+        comparisonContentViewport.classList.add('hidden');
+        comparisonChevron.style.transform = 'rotate(0deg)';
+      }
+    });
+
+    shareBundleBtn.addEventListener('click', () => {
+      try {
+        const optionsPayload = {
+          text: userInput.value.trim(),
+          type: selectedType,
+          target: selectedTarget,
+          tone: selectedTone,
+          lang: languageSelector.value
+        };
+        const utf8Bytes = new TextEncoder().encode(JSON.stringify(optionsPayload));
+        const base64String = btoa(String.fromCharCode(...utf8Bytes))
+          .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        
+        const sharingURL = `${window.location.origin}${window.location.pathname}?data=${base64String}`;
+        navigator.clipboard.writeText(sharingURL).then(() => {
+          triggerToast("Share link copied to clipboard!", "link");
+        });
+      } catch (err) {
+        showError("Failed to bundle and generate share link configurations.");
+      }
+    });
+
+    function verifyIncomingVectorSharePayloads() {
+      const addressTargetParameters = new URLSearchParams(window.location.search);
+      const payloadString = addressTargetParameters.get('data');
+      if (payloadString) {
+        try {
+          let normalizedBase64 = payloadString.replace(/-/g, '+').replace(/_/g, '/');
+          while (normalizedBase64.length % 4) normalizedBase64 += '=';
+          
+          const binaryString = atob(normalizedBase64);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const compositeState = JSON.parse(new TextDecoder().decode(bytes));
+          
+          if (compositeState.text) {
+            userInput.value = compositeState.text;
+            languageSelector.value = compositeState.lang || "English";
+            
+            triggerAutomaticChipSelectionStateSync('type-chip', compositeState.type);
+            triggerAutomaticChipSelectionStateSync('target-chip', compositeState.target);
+            triggerAutomaticChipSelectionStateSync('tone-chip', compositeState.tone);
+            
+            triggerToast("Shared prompt data decoded and loaded into workspace context.", "download");
+            
+            setTimeout(() => {
+              generateBtn.click();
+            }, 600);
+          }
+        } catch (e) {
+          showError("The processing pipeline failed to decode the shared URL properties.");
+        }
+      }
+    }
+
+    function triggerAutomaticChipSelectionStateSync(className, targetValue) {
+      if (!targetValue) return;
+      document.querySelectorAll(`.${className}`).forEach(chip => {
+        if (chip.getAttribute('data-value') === targetValue) {
+          chip.click();
+        }
+      });
+    }
+
+    tabRecentBtn.addEventListener('click', () => {
+      currentDashboardTab = "recent";
+      tabRecentBtn.classList.add('tab-active');
+      tabSavedBtn.classList.remove('tab-active');
+      dashboardRecentView.classList.remove('hidden');
+      dashboardSavedView.classList.add('hidden');
+      searchFilterWrapperNode.classList.add('hidden');
+      exportPdfTriggerBtn.classList.add('hidden');
+    });
+
+    tabSavedBtn.addEventListener('click', () => {
+      currentDashboardTab = "saved";
+      tabSavedBtn.classList.add('tab-active');
+      tabRecentBtn.classList.remove('tab-active');
+      dashboardSavedView.classList.remove('hidden');
+      dashboardRecentView.classList.add('hidden');
+      searchFilterWrapperNode.classList.remove('hidden');
+      exportPdfTriggerBtn.classList.remove('hidden');
+    });
+
+    // Fixed: Added safety checks to prevent crashes if mic permissions are denied or unsecured
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true; 
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.style.backgroundColor = '#ef4444';
+        micBtn.style.color = '#ffffff';
+        micIcon.setAttribute('data-lucide', 'mic-off');
+        micWave.classList.remove('hidden');
+        lucide.createIcons();
+      };
+
+      recognition.onresult = (event) => {
+        let speechToText = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            speechToText += event.results[i][0].transcript + " ";
+          }
+        }
+        if (speechToText) {
+          userInput.value = userInput.value ? userInput.value.trim() + " " + speechToText.trim() : speechToText.trim();
+        }
+      };
+
+      recognition.onerror = (event) => {
+  if (event.error === "network") {
+    showError(
+      "Voice input is not supported reliably in Edge. Please use Chrome or switch to Whisper mode."
+    );
+  } else if (event.error === "not-allowed") {
+    showError(
+      "Microphone permission denied. Please allow microphone access."
+    );
+  } else {
+    showError(`Voice recognition error: ${event.error}`);
+  }
+
+  stopDictation();
+};
+
+      recognition.onend = () => {
+        if (!isListening) {
+          stopDictation();
+        } else {
+          try { recognition.start(); } catch(e) {}
+        }
+      };
+    } else {
+      micBtn.classList.add('opacity-40', 'cursor-not-allowed');
+      micBtn.title = "Voice Input interface not supported on this device/connection protocol.";
+    }
+
+    function stopDictation() {
+      isListening = false;
+      micBtn.style.backgroundColor = '';
+      micBtn.style.color = '';
+      micIcon.setAttribute('data-lucide', 'mic');
+      micWave.classList.add('hidden');
+      lucide.createIcons();
+      if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+      }
+    }
+
+    micBtn.addEventListener('click', () => {
+       if (isEdge) {
+    showError(
+      "For best voice recognition, use Google Chrome. Edge may produce network errors."
+    );
+    return;
+  }
+      if (!recognition) return;
+      if (isListening) {
+        stopDictation();
+      } else {
+        clearError();
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        try {
+          recognition.start();
+        } catch(e) {
+          showError("Could not launch speech services. Ensure you are loading via localhost/https.");
+        }
+      }
+    });
+
+    generateBtn.addEventListener('click', async () => {
+      const promptText = userInput.value.trim();
+      clearError();
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+      if (!GROQ_KEY || GROQ_KEY === "") {
+        showError("API Key Configuration Missing: Please set your VITE_GROQ_API_KEY inside your local .env file.");
+        return;
+      }
+
+      if (!promptText) {
+        showError("Please enter a problem statement or text instruction first.");
+        return;
+      }
+
+      if (isListening) stopDictation();
+
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
+      lucide.createIcons();
+      skeleton.classList.remove('hidden');
+      resultsContainer.classList.add('hidden');
+
+      const systemInstruction = `
+        You are an expert AI prompt engineer. Analyze the user's problem statement and correct any spelling mistakes, grammatical errors, typos, or acoustic transcription errors present in their input. 
+        Evaluate the quality score of the user's input phrase on a scale from 1 to 10 and provide a concise reason.
+        Generate exactly 3 highly optimized, production-ready prompts based specifically around the requested type: "${selectedType}", optimized targeted architecture for the engine: "${selectedTarget}", and matching the designated communication tone style: "${selectedTone}".
+        Optimize this prompt specifically for ${selectedTarget}.
+        Generate all 3 prompts in ${languageSelector.value}.
+        Your response must strictly match the JSON schema layout specified without raw conversational prefixes.
+      `;
+
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${GROQ_KEY}`
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: systemInstruction },
+              { role: "user", content: `User Problem Input: "${promptText}". Output should match this structural schema layout: { "score": integer, "scoreReason": "string", "correctedInput": "string", "prompts": [ { "title": "string", "type": "string", "prompt": "string", "improvedExplanation": "string" } ] }` }
+            ]
+          })
+        });
+
+        const rawText = await response.text();
+        let data;
+        try { data = JSON.parse(rawText); } catch (e) {
+          throw new Error("Received an unparseable response from the Groq inference engine.");
+        }
+
+        if (!response.ok || data.error) {
+          throw new Error(data.error?.message || `HTTP Execution Structural Fault Frame (Status Code: ${response.status})`);
+        }
+
+        let cleanText = data.choices[0].message.content.trim();
+        const payload = JSON.parse(cleanText);
+        
+        saveToHistory(promptText);
+        renderScoreBadge(payload.score, payload.scoreReason);
+        
+        comparisonRawBox.textContent = promptText;
+        comparisonPolishedBox.textContent = payload.correctedInput || promptText;
+        
+        baselinePromptsList = payload.prompts || [];
+        renderCards(baselinePromptsList, promptText);
+
+      } catch (err) {
+        console.error(err);
+        showError(err.message || "An anomaly interrupted the execution cycles.");
+      } finally { 
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = `<i data-lucide="wand-2" class="w-4 h-4"></i> Generate Engineered Prompts`;
+        lucide.createIcons();
+        skeleton.classList.add('hidden');
+      }
+    });
+    
+
+
+
+    function renderScoreBadge(score, reason) {
+      let colors = "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40";
+      if (score >= 4 && score <= 7) colors = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40";
+      if (score >= 8) colors = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40";
+
+      scoreBadgeContainer.innerHTML = `
+        <div class="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-lg border ${colors}">
+          Your original prompt score: ${score}/10 — ${reason}
+        </div>
+      `;
+    }
+
+    copyAllBtn.addEventListener('click', () => {
+      if (!baselinePromptsList.length) return;
+      const compoundString = baselinePromptsList.map((item, index) => `--- PROMPT ${index + 1}: ${item.title} [${item.type}] ---\n${item.prompt}`).join('\n\n');
+      navigator.clipboard.writeText(compoundString).then(() => {
+        triggerToast("Copied all 3 prompts!", "check-circle");
+      });
+    });
+
+    function triggerToast(msg, iconName = "info") {
+      toastText.textContent = msg;
+      toastIcon.setAttribute('data-lucide', iconName);
+      lucide.createIcons();
+      
+      toastNotification.classList.remove('opacity-0', 'pointer-events-none');
+      toastNotification.classList.add('opacity-100');
+      toastNotification.style.transform = "translateY(0px)";
+      setTimeout(() => {
+        toastNotification.classList.remove('opacity-100');
+        toastNotification.classList.add('opacity-0', 'pointer-events-none');
+        toastNotification.style.transform = "translateY(-20px)";
+      }, 2500);
+    }
+
+    function calculateTimeDistance(timestamp) {
+      const difference = Date.now() - timestamp;
+      const seconds = Math.floor(difference / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (seconds < 60) return 'Just now';
+      if (minutes < 60) return `${minutes} mins ago`;
+      if (hours < 24) return `${hours} hours ago`;
+      if (days === 1) return 'Yesterday';
+      return `${days} days ago`;
+    }
+
+    function saveToHistory(text) {
+      let history = JSON.parse(localStorage.getItem('genius_history_list') || '[]');
+      history = history.filter(entry => entry.text.toLowerCase() !== text.toLowerCase());
+      history.unshift({ text: text, timestamp: Date.now() });
+      if (history.length > 5) history.pop();
+      localStorage.setItem('genius_history_list', JSON.stringify(history));
+      renderDashboard();
+    }
+
+    function deleteHistoryItem(index) {
+      let history = JSON.parse(localStorage.getItem('genius_history_list') || '[]');
+      history.splice(index, 1);
+      localStorage.setItem('genius_history_list', JSON.stringify(history));
+      renderDashboard();
+    }
+
+    function savePromptBookmark(title, type, prompt, assignedTag = "") {
+      let saved = JSON.parse(localStorage.getItem('genius_bookmarks_list') || '[]');
+      const standsDuplicate = saved.some(item => item.prompt === prompt);
+      if (!standsDuplicate) {
+        saved.unshift({ title, type, prompt, tag: assignedTag.trim().toLowerCase(), timestamp: Date.now() });
+        localStorage.setItem('genius_bookmarks_list', JSON.stringify(saved));
+        renderDashboard();
+      }
+    }
+
+    function deleteBookmarkItem(index) {
+      let saved = JSON.parse(localStorage.getItem('genius_bookmarks_list') || '[]');
+      saved.splice(index, 1);
+      localStorage.setItem('genius_bookmarks_list', JSON.stringify(saved));
+      renderDashboard();
+    }
+
+    clearDashboardBtn.addEventListener('click', () => {
+      if (currentDashboardTab === "recent") {
+        localStorage.setItem('genius_history_list', '[]');
+      } else {
+        localStorage.setItem('genius_bookmarks_list', '[]');
+      }
+      renderDashboard();
+    });
+
+    savedSearchQuery.addEventListener('input', (e) => {
+      activeFilteringSearchQuery = e.target.value.toLowerCase().trim();
+      renderDashboard();
+    });
+
+    exportPdfTriggerBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    function renderDashboard() {
+      const history = JSON.parse(localStorage.getItem('genius_history_list') || '[]');
+      const saved = JSON.parse(localStorage.getItem('genius_bookmarks_list') || '[]');
+
+      if (!history.length) {
+        dashboardRecentView.innerHTML = `<div class="text-sm text-slate-400 italic py-4 text-center">Your recent prompts will appear here</div>`;
+      } else {
+        dashboardRecentView.innerHTML = '';
+        history.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = "flex items-center justify-between gap-4 p-4 rounded-xl border transition-all shadow-sm history-item-card";
+          
+          const truncated = item.text.length > 80 ? item.text.substring(0, 80) + "..." : item.text;
+          const distanceTime = calculateTimeDistance(item.timestamp);
+
+          card.innerHTML = `
+            <div class="flex flex-col gap-0.5 min-w-0 flex-grow">
+              <p class="text-xs font-medium break-words pr-2">${truncated}</p>
+              <span class="text-[10px] text-slate-400">${distanceTime}</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 print:hidden">
+              <button class="reuse-btn px-3 py-1 text-xs font-semibold text-indigo-600 hover:text-white border border-indigo-200 hover:border-indigo-600 bg-transparent hover:bg-indigo-600 rounded-lg transition-all cursor-pointer">Reuse</button>
+              <button class="delete-btn p-1 text-slate-400 hover:text-red-500 rounded-md hover:bg-slate-100/20 transition-all cursor-pointer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+            </div>
+          `;
+
+          card.querySelector('.reuse-btn').addEventListener('click', () => {
+            userInput.value = item.text;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            triggerToast("Prompt loaded! Click Generate to enhance it.", "check-circle");
+          });
+
+          card.querySelector('.delete-btn').addEventListener('click', () => deleteHistoryItem(index));
+          dashboardRecentView.appendChild(card);
+        });
+      }
+
+      const filteringMatchList = saved.filter(item => {
+        if (!activeFilteringSearchQuery) return true;
+        const bodyMatches = item.prompt.toLowerCase().includes(activeFilteringSearchQuery) || item.title.toLowerCase().includes(activeFilteringSearchQuery);
+        const tagMatches = item.tag && item.tag.includes(activeFilteringSearchQuery);
+        return bodyMatches || tagMatches;
+      });
+
+      if (!filteringMatchList.length) {
+        dashboardSavedView.innerHTML = `<div class="text-sm text-slate-400 italic py-4 text-center">No records matched the current search tags.</div>`;
+      } else {
+        dashboardSavedView.innerHTML = '';
+        filteringMatchList.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = "flex items-center justify-between gap-4 p-4 rounded-xl border transition-all shadow-sm saved-print-card history-item-card";
+          
+          const truncatedPrompt = item.prompt.length > 80 ? item.prompt.substring(0, 80) + "..." : item.prompt;
+          const tagBadgeMarkup = item.tag ? `<span class="tag-click-badge text-[9px] font-bold tracking-tight bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60 px-1.5 py-0.2 rounded cursor-pointer hover:bg-amber-100" data-tagname="${item.tag}">🏷️ ${item.tag}</span>` : '';
+
+          card.innerHTML = `
+            <div class="flex flex-col gap-1 min-w-0 flex-grow">
+              <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                <span class="text-[10px] font-bold tracking-wide uppercase text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 rounded-md">${item.type}</span>
+                <span class="text-xs font-semibold truncate">${item.title}</span>
+                ${tagBadgeMarkup}
+              </div>
+              <p class="text-xs text-slate-500 dark:text-zinc-400 truncate print:whitespace-pre-wrap print:overflow-visible">${truncatedPrompt}</p>
+              <p class="hidden print:block text-xs text-zinc-800 mt-2 font-mono border-t pt-2 border-dashed border-gray-300">${item.prompt}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 print:hidden">
+              <button class="reuse-btn px-3 py-1 text-xs font-semibold text-indigo-600 hover:text-white border border-indigo-200 hover:border-indigo-600 bg-transparent hover:bg-indigo-600 rounded-lg transition-all cursor-pointer">Load</button>
+              <button class="delete-btn p-1 text-slate-400 hover:text-red-500 rounded-md hover:bg-slate-100/20 transition-all cursor-pointer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+            </div>
+          `;
+
+          card.querySelector('.reuse-btn').addEventListener('click', () => {
+            userInput.value = item.prompt;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            triggerToast("Prompt loaded! Click Generate to enhance it.", "check-circle");
+          });
+
+          card.querySelector('.delete-btn').addEventListener('click', () => {
+            const coreSavedIndex = saved.findIndex(x => x.prompt === item.prompt);
+            deleteBookmarkItem(coreSavedIndex);
+          });
+
+          if (item.tag) {
+            card.querySelector('.tag-click-badge').addEventListener('click', (e) => {
+              e.stopPropagation();
+              savedSearchQuery.value = item.tag;
+              activeFilteringSearchQuery = item.tag;
+              renderDashboard();
+            });
+          }
+
+          dashboardSavedView.appendChild(card);
+        });
+      }
+
+      lucide.createIcons();
+    }
+
+    function renderCards(prompts, originalText) {
+      cardsGrid.innerHTML = '';
+      
+      prompts.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = "flex flex-col rounded-xl p-5 border transition-all relative group dynamic-card shadow-sm";
+
+        const badgeColor = item.type?.toLowerCase() === 'image' ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400' : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400';
+        const collapseId = `collapse-view-${index}`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-3 gap-2">
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full border ${badgeColor}">${item.type || 'Chat'}</span>
+            <div class="flex gap-1 print:hidden">
+              <button class="speak-btn text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-800 border border-transparent transition-all cursor-pointer" title="Speak Prompt Out Loud">
+                <i data-lucide="volume-2" class="w-4 h-4"></i>
+              </button>
+              <button class="share-card-btn text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-800 border border-transparent transition-all cursor-pointer" title="Share This Specific Transformation Prompt Link">
+                <i data-lucide="link" class="w-4 h-4"></i>
+              </button>
+              <button class="bookmark-btn text-slate-400 hover:text-amber-500 p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-800 border border-transparent transition-all cursor-pointer" title="Save Prompt to Library Storage Matrix">
+                <i data-lucide="bookmark" class="w-4 h-4"></i>
+              </button>
+              <button class="copy-btn text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-800 border border-transparent transition-all cursor-pointer" title="Copy Prompt text blocks">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <h3 class="font-semibold text-base mb-2">${item.title}</h3>
+          <p class="text-sm text-slate-600 dark:text-zinc-300 tracking-normal leading-relaxed whitespace-pre-wrap flex-grow mb-4">${item.prompt}</p>
+          
+          <div class="border-t pt-3 mt-auto border-slate-200 dark:border-zinc-800">
+            <button class="toggle-diff-btn flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer w-full text-left justify-between">
+              <span>See contextual modifications</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 transform"></i>
+            </button>
+            <div id="${collapseId}" class="hidden mt-3 space-y-2 bg-slate-50/50 dark:bg-zinc-900/40 p-3 border rounded-lg text-[11px] leading-relaxed border-slate-200 dark:border-zinc-800">
+              <span class="font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">Structural Optimization Delta Notes:</span>
+              <p class="text-slate-600 dark:text-zinc-300">${item.improvedExplanation}</p>
+            </div>
+          </div>
+        `;
+
+        const toggleDiffBtn = card.querySelector('.toggle-diff-btn');
+        const diffSection = card.querySelector(`#${collapseId}`);
+        const chevronIcon = toggleDiffBtn.querySelector('[data-lucide="chevron-down"]');
+        
+        toggleDiffBtn.addEventListener('click', () => {
+          const isCollapsed = diffSection.classList.contains('hidden');
+          if (isCollapsed) {
+            diffSection.classList.remove('hidden');
+            chevronIcon.style.transform = 'rotate(180deg)';
+          } else {
+            diffSection.classList.add('hidden');
+            chevronIcon.style.transform = 'rotate(0deg)';
+          }
+        });
+
+        card.querySelector('.share-card-btn').addEventListener('click', () => {
+          const payload = {
+            text: item.prompt,
+            type: item.type || 'Chat',
+            target: selectedTarget,
+            tone: selectedTone,
+            lang: languageSelector.value
+          };
+          const utf8Bytes = new TextEncoder().encode(JSON.stringify(payload));
+          const base64String = btoa(String.fromCharCode(...utf8Bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+          const sharingURL = `${window.location.origin}${window.location.pathname}?data=${base64String}`;
+          navigator.clipboard.writeText(sharingURL).then(() => {
+            triggerToast("Specific prompt transformation URL copied to clipboard!", "link");
+          });
+        });
+
+        const bookmarkBtn = card.querySelector('.bookmark-btn');
+        bookmarkBtn.addEventListener('click', () => {
+          const userDefinedTagInput = prompt("Enter an optional search tag classification keyword phrase for this template item (e.g. Work, Coding, Creative):");
+          const verifiedTag = userDefinedTagInput !== null ? userDefinedTagInput : "";
+          
+          savePromptBookmark(item.title, item.type || 'Chat', item.prompt, verifiedTag);
+          bookmarkBtn.innerHTML = `<i data-lucide="bookmark-check" class="w-4 h-4 text-amber-500"></i>`;
+          lucide.createIcons();
+          setTimeout(() => {
+            bookmarkBtn.innerHTML = `<i data-lucide="bookmark" class="w-4 h-4"></i>`;
+            lucide.createIcons();
+          }, 1500);
+        });
+
+        const copyBtn = card.querySelector('.copy-btn');
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(item.prompt).then(() => {
+            copyBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-600"></i>`;
+            lucide.createIcons();
+            setTimeout(() => {
+              copyBtn.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i>`;
+              lucide.createIcons();
+            }, 2000);
+          }).catch(() => {
+            alert("Could not automatically write values to clipboard registries.");
+          });
+        });
+
+        const speakBtn = card.querySelector('.speak-btn');
+        speakBtn.addEventListener('click', () => {
+          if (!window.speechSynthesis) {
+            alert("Your runtime lacks support for the SpeechSynthesis components loop.");
+            return;
+          }
+
+          if (window.speechSynthesis.speaking && currentUtterance && currentUtterance.text === item.prompt) {
+            window.speechSynthesis.cancel();
+            speakBtn.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4"></i>`;
+            lucide.createIcons();
+            return;
+          }
+
+          window.speechSynthesis.cancel();
+          document.querySelectorAll('.speak-btn').forEach(b => {
+            b.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4"></i>`;
+          });
+
+          currentUtterance = new SpeechSynthesisUtterance(item.prompt);
+          
+          currentUtterance.onstart = () => {
+            speakBtn.innerHTML = `<i data-lucide="volume-x" class="w-4 h-4 text-indigo-600 animate-pulse"></i>`;
+            lucide.createIcons();
+          };
+
+          currentUtterance.onend = () => {
+            speakBtn.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4"></i>`;
+            lucide.createIcons();
+          };
+
+          currentUtterance.onerror = () => {
+            speakBtn.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4"></i>`;
+            lucide.createIcons();
+          };
+
+          window.speechSynthesis.speak(currentUtterance);
+        });
+
+        cardsGrid.appendChild(card);
+      });
+
+      resultsContainer.classList.remove('hidden');
+      lucide.createIcons();
+    }
+      function showError(message) {
+  errorMessage.textContent = message;
+  errorBox.classList.remove('hidden');
+}
+
+function clearError() {
+  errorBox.classList.add('hidden');
+  errorMessage.textContent = '';
+}
+    
+  </script>
+</body>
+</html>
