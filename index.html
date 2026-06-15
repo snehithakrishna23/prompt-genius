@@ -265,7 +265,7 @@ textarea:focus {
   </style>
 </head>
 <script src="./dashboard-v2.js"></script>
-<body class="min-h-screen flex flex-col items-center p-4 sm:p-8 relative">
+<body class="dark min-h-screen flex flex-col items-center p-4 sm:p-8 relative">
   <div class="floating-bg">
   <div class="blob blob-1"></div>
   <div class="blob blob-2"></div>
@@ -280,9 +280,7 @@ textarea:focus {
   <main class="w-full max-w-6xl rounded-2xl shadow-sm border p-6 sm:p-8 mt-10 dynamic-card relative transition-all">
     
     <div class="absolute top-6 right-6 flex items-center gap-2 print:hidden">
-      <button id="theme-toggle-btn" class="p-2.5 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:text-indigo-600 transition-all cursor-pointer shadow-sm" title="Toggle Display Theme Mode">
-        <i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i>
-      </button>
+      
     </div>
 
     <header class="mb-8 text-center sm:text-left">
@@ -607,30 +605,15 @@ textarea:focus {
     }
 
     function setupThemeRuntimeState() {
-      const persistedThemePreference = localStorage.getItem('genius_user_theme_mode') || 'light';
-      if (persistedThemePreference === 'dark') {
-        document.body.classList.add('dark');
-        themeIcon.setAttribute('data-lucide', 'sun');
-      } else {
-        document.body.classList.remove('dark');
-        themeIcon.setAttribute('data-lucide', 'moon');
-      }
-      lucide.createIcons();
-      
-      themeToggleBtn.addEventListener('click', () => {
-        const triggersDarkNow = !document.body.classList.contains('dark');
-        if (triggersDarkNow) {
-          document.body.classList.add('dark');
-          localStorage.setItem('genius_user_theme_mode', 'dark');
-          themeIcon.setAttribute('data-lucide', 'sun');
-        } else {
-          document.body.classList.remove('dark');
-          localStorage.setItem('genius_user_theme_mode', 'light');
-          themeIcon.setAttribute('data-lucide', 'moon');
-        }
-        lucide.createIcons();
-      });
-    }
+
+  document.body.classList.add('dark');
+
+  localStorage.setItem(
+    'genius_user_theme_mode',
+    'dark'
+  );
+
+}
 
     function restoreLocalUserSavedPreferences() {
       const recordedLanguageSetting = localStorage.getItem('genius_output_language_code');
